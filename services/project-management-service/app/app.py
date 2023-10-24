@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from schemas import Project, ProjectBase
+from .schemas import Project, ProjectBase
 from typing import Dict
 
 app = FastAPI()
@@ -20,7 +20,7 @@ def create_project(project: ProjectBase):
 
 @app.get("/projects", response_model=list[Project], summary='Возвращает список проектов')
 def get_projects():
-    return [v for k, v in projects_db.items()]
+    return list(projects_db.values())
 
 
 @app.get("/projects/{project_id}", summary='Возвращает информацию о проекте')
