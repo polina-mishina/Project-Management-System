@@ -1,3 +1,5 @@
 **/__pycache__/*
 venv/
 .idea/
+deploy/postgresql/data/*
+!deploy/postgresql/data/.gitkeep
