@@ -1,3 +1,3 @@
-from .project import ProjectBase, Project
+from .project import ProjectBase, Project, ProjectIn
 
-__all__ = [ProjectBase, Project]
+__all__ = [ProjectBase, Project, ProjectIn]
