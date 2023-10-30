@@ -12,9 +12,9 @@ services:
     volumes:
       - postgresql-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_PASSWORD: task-manager
-      POSTGRES_USER: task-manager
-      POSTGRES_DB: task-manager
+      POSTGRES_PASSWORD: project-management
+      POSTGRES_USER: project-management
+      POSTGRES_DB: project-management
       PGDATA: /var/lib/postgresql/data/db-files/
     ports:
       - "5432:5432"
