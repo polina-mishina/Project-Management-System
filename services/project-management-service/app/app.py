@@ -1,5 +1,4 @@
-from fastapi import FastAPI, Depends
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from .schemas import Project, ProjectIn
 from .database import Base, engine, SessionLocal
@@ -36,22 +35,22 @@ def get_projects_list(db: Session = Depends(get_db)) -> List[Project]:
 @app.get("/projects/{project_id}", summary='Возвращает информацию о проекте')
 def get_project_info(project_id: int, db: Session = Depends(get_db)) -> Project:
     project = crud.get_project(db, project_id)
-    if project is not None:
-        return project
-    return JSONResponse(status_code=404, content={"message": "Проект не найден"})
+    if project is None:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+    return project
 
 
 @app.put("/projects/{project_id}", summary='Обновляет информацию о проекте')
 def update_project(project_id: int, project: ProjectIn, db: Session = Depends(get_db)) -> Project:
     project = crud.update_project(db, project_id, project)
-    if project is not None:
-        return project
-    return JSONResponse(status_code=404, content={"message": "Проект не найден"})
+    if project is None:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+    return project
 
 
 @app.delete("/projects/{project_id}", summary='Удаляет проект из базы')
 def delete_project(project_id: int, db: Session = Depends(get_db)) -> Project:
     deleted_project = crud.delete_project(db, project_id)
-    if deleted_project is not None:
-        return deleted_project
-    return JSONResponse(status_code=404, content={"message": "Проект не найден"})
+    if deleted_project is None:
+        raise HTTPException(status_code=404, detail="Проект не найден")
+    return deleted_project
