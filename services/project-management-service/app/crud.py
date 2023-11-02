@@ -26,7 +26,7 @@ def get_projects(db: Session) -> List[models.Project]:
     return db.query(models.Project).all() #TODO почему предупреждение?
 
 
-def get_project(db: Session, project_id: int) -> models.Project:
+def get_project(db: Session, project_id: int) -> models.Project | None:
     """
     Возвращает информацию о конкретном проекте
     """
