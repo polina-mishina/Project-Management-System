@@ -49,8 +49,8 @@ def update_project(project_id: int, project: ProjectIn, db: Session = Depends(ge
     return JSONResponse(status_code=404, content={"message": "Проект не найден"})
 
 
-@app.delete("/projects/{project_id}", summary='Удаляет устройство из базы')
-def delete_device(project_id: int, db: Session = Depends(get_db)) -> Project:
+@app.delete("/projects/{project_id}", summary='Удаляет проект из базы')
+def delete_project(project_id: int, db: Session = Depends(get_db)) -> Project:
     deleted_project = crud.delete_project(db, project_id)
     if deleted_project is not None:
         return deleted_project
