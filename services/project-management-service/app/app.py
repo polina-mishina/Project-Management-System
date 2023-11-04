@@ -1,19 +1,16 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from .schemas import Project, ProjectIn
-from .database import Base, engine, SessionLocal
-from . import crud
+from .database import DB_INITIALIZER
+from . import crud, config
 from typing import List
 
-# Создание таблиц базы данных
-Base.metadata.create_all(bind=engine)
+cfg: config.Config = config.load_config()
+SessionLocal = DB_INITIALIZER.init_database(cfg.postgres_dsn)
 
 app = FastAPI()
 
 
-# Создание сессии для запроса
-# с закрытием сеанса после завершения запроса,
-# даже если было исключение при обработке запроса
 def get_db():
     db = SessionLocal()
     try:
