@@ -18,3 +18,9 @@ services:
       PGDATA: /var/lib/postgresql/data/db-files/
     ports:
       - "5432:5432"
+  project-management-service:
+    image: project-management/project-management-service:0.1
+    ports:
+      - "5000:5000"
+    environment:
+      POSTGRES_DSN: postgresql://project-management:project-management@172.18.0.1:5432/project-management

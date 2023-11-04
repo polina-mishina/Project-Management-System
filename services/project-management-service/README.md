@@ -17,7 +17,7 @@
 # Запуск
 
 ```bash
-uvicorn app:app --reload
+uvicorn app:app --port 5000 --reload
 ```
 
 # Запуск с использование файла конфигурации .env
@@ -27,24 +27,29 @@ uvicorn app:app --reload
 # Запуск с переопределением переменных окружения
 
 ```bash
-uvicorn app:app --reload
+uvicorn app:app --port 5000 --reload
 ```
 
 или
 
 ```bash
-export POSTGRES_DSN=postgresql://project-management:project-management@localhost/project-management
-uvicorn app:app --reload
+export POSTGRES_DSN=postgresql://project-management:project-management@172.18.0.1:5432/project-management
+uvicorn app:app --port 5000 --reload
 ```
 
 # Конфигурация
-| Переменная   | Назначение                      | Значение по умолчанию                        |
-|--------------|---------------------------------|----------------------------------------------|
-| POSTGRES_DSN | Строка подключения к PostgreSQL | postgresql://user:pass@localhost:5432/foobar |
+| Переменная   | Назначение                      | Значение по умолчанию                         |
+|--------------|---------------------------------|-----------------------------------------------|
+| POSTGRES_DSN | Строка подключения к PostgreSQL | postgresql://user:pass@localhost/foobar |
 
 # Документация
 
-После запуска доступна документация: http://127.0.0.1:8000/docs
+После запуска доступна документация: http://127.0.0.1:5000/docs
+
+# Сборка образа
+```bash
+docker build -t project-management/project-management-service:0.1 .
+```
 
 # Модули сервиса
 

@@ -7,7 +7,7 @@
 
 # Запуск
 ```bash
-docker-compose up -d
+docker-compose -p project-management up -d
 ```
 ## Проверка статусов сервисов
 
@@ -56,7 +56,7 @@ deploy/postgresql/data/*
 ```
 - Создается контейнер **postgresql** на базе образа postgres:14.9-alpine3.18
 - К контейнеру монтируется volume **postgresql-data**
-- Пробрасываются порты, PostreSQL будет доступен по {MACHINE_IP}:5432, например: localhost:5432.
+- Пробрасываются порты, PostreSQL будет доступен по {MACHINE_IP}:5432, например: 172.18.0.1:5432.
 - Через переменные окружения задается пользователь, название первичной базы данных и директория хранения данных внутри контейнера:
 ```bash
 POSTGRES_PASSWORD: project-management
