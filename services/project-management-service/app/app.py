@@ -6,7 +6,7 @@ from . import crud, config
 from typing import List
 
 cfg: config.Config = config.load_config()
-SessionLocal = DB_INITIALIZER.init_database(cfg.postgres_dsn)
+SessionLocal = DB_INITIALIZER.init_database(str(cfg.postgres_dsn))
 
 app = FastAPI()
 
