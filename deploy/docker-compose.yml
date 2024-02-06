@@ -6,6 +6,12 @@ volumes:
       o: bind
       type: none
       device: ./postgresql/data
+  user-service-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./user-service
 services:
   postgresql:
     image: postgres:14.9-alpine3.18
@@ -18,9 +24,42 @@ services:
       PGDATA: /var/lib/postgresql/data/db-files/
     ports:
       - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d  $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
   project-management-service:
     image: project-management/project-management-service:0.0.1
     ports:
       - "5000:5000"
     environment:
-      POSTGRES_DSN: postgresql://project-management:project-management@172.18.0.1:5432/project-management
+      POSTGRES_DSN: ${POSTGRES_DSN}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+  task-management-service:
+    image: project-management/task-management-service:0.0.1
+    ports:
+      - "5001:5000"
+    environment:
+      POSTGRES_DSN: ${POSTGRES_DSN}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+  user-service:
+    image: project-management/user-service:0.0.1
+    ports:
+      - "5002:5000"
+    environment:
+      POSTGRES_DSN_ASYNC: ${POSTGRES_DSN_ASYNC}
+      JWT_SECRET: ${JWT_SECRET}
+      RESET_PASSWORD_TOKEN_SECRET: ${RESET_PASSWORD_TOKEN_SECRET}
+      VERIFICATION_TOKEN_SECRET: ${VERIFICATION_TOKEN_SECRET}
+      DEFAULT_GROUPS_CONFIG_PATH: ${DEFAULT_GROUPS_CONFIG_PATH}
+    volumes:
+      - user-service-data:/mnt/
+    depends_on:
+      postgresql:
+        condition: service_healthy
