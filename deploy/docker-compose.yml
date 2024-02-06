@@ -19,7 +19,7 @@ services:
     ports:
       - "5432:5432"
   project-management-service:
-    image: project-management/project-management-service:0.1
+    image: project-management/project-management-service:0.0.1
     ports:
       - "5000:5000"
     environment:

@@ -1,3 +1,5 @@
+import uuid
+from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
 
@@ -18,6 +20,9 @@ class Project(ProjectBase):
     Модель используемая при запросе информации о проекте
     """
     id: int
+    creator_id: uuid.UUID
+    add_date: Optional[datetime] = None
+    update_date: Optional[datetime] = None
 
 
 class ProjectIn(ProjectBase):
