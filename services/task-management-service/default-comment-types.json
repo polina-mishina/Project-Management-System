@@ -1,0 +1,18 @@
+[
+    {
+        "id": 1,
+        "name": "edit_text"
+    },
+    {
+        "id": 2,
+        "name": "change_executor"
+    },
+    {
+        "id": 3,
+        "name": "change_completion_date"
+    },
+    {
+        "id": 4,
+        "name": "user_comment"
+    }
+]
