@@ -12,6 +12,12 @@ volumes:
       o: bind
       type: none
       device: ./user-service
+  task-management-service-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./task-management-service
 services:
   postgresql:
     image: postgres:14.9-alpine3.18
@@ -45,6 +51,9 @@ services:
       - "5001:5000"
     environment:
       POSTGRES_DSN: ${POSTGRES_DSN}
+      DEFAULT_COMMENT_TYPES_CONFIG_PATH: ${DEFAULT_COMMENT_TYPES_CONFIG_PATH}
+    volumes:
+      - task-management-service-data:/mnt/
     depends_on:
       postgresql:
         condition: service_healthy
