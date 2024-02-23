@@ -11,7 +11,8 @@ class TaskBase(BaseModel):
     """
     name: str
     description: Optional[str] = None
-    executor_id: uuid.UUID
+    executor_id: Optional[uuid.UUID] = None
+    completion_date: Optional[datetime] = None
 
     class ConfigDict:
         from_attributes = True
@@ -23,21 +24,37 @@ class Task(TaskBase):
     """
     id: int
     project_id: int
-    creator_id: uuid.UUID
-    add_date: Optional[datetime] = None
+    parent_task_id: Optional[int] = None
+    create_date: datetime
     update_date: Optional[datetime] = None
+    creator_id: uuid.UUID
 
 
-class Subtask(Task):
+class TaskCreate(TaskBase):
     """
-    Модель используемая при запросе информации о подзадаче
+    Модель для добавления задачи
     """
-    parent_task_id: int
+    project_id: int
+    parent_task_id: Optional[int] = None
+    creator_id: uuid.UUID
 
 
-class TaskIn(TaskBase):
+class TaskUpdate(TaskBase):
     """
-    Модель для добавления/обновления задачи, т.к при добавлении/обновлении
-    id не передается или передается через url, а не через тело запроса
+    Модель для обновления задачи
     """
-    pass
+    user_id: uuid.UUID
+
+
+class TaskPartialUpdate(BaseModel):
+    """
+    Модель для частичного обновления задачи
+    """
+    name: Optional[str] = None
+    description: Optional[str] = None
+    user_id: uuid.UUID
+    executor_id: Optional[uuid.UUID] = None
+    completion_date: Optional[datetime] = None
+
+    class ConfigDict:
+        from_attributes = True
