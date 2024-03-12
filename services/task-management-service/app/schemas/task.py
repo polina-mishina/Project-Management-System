@@ -9,7 +9,7 @@ class TaskBase(BaseModel):
     """
     Базовая модель задачи
     """
-    name: str
+    name: Optional[str] = None
     description: Optional[str] = None
     executor_id: Optional[uuid.UUID] = None
     completion_date: Optional[datetime] = None
@@ -25,9 +25,10 @@ class Task(TaskBase):
     id: int
     project_id: int
     parent_task_id: Optional[int] = None
+    creator_id: uuid.UUID
     create_date: datetime
     update_date: Optional[datetime] = None
-    creator_id: uuid.UUID
+    name: str
 
 
 class TaskCreate(TaskBase):
@@ -37,6 +38,7 @@ class TaskCreate(TaskBase):
     project_id: int
     parent_task_id: Optional[int] = None
     creator_id: uuid.UUID
+    name: str
 
 
 class TaskUpdate(TaskBase):
@@ -44,17 +46,11 @@ class TaskUpdate(TaskBase):
     Модель для обновления задачи
     """
     user_id: uuid.UUID
+    name: str
 
 
-class TaskPartialUpdate(BaseModel):
+class TaskPartialUpdate(TaskBase):
     """
     Модель для частичного обновления задачи
     """
-    name: Optional[str] = None
-    description: Optional[str] = None
     user_id: uuid.UUID
-    executor_id: Optional[uuid.UUID] = None
-    completion_date: Optional[datetime] = None
-
-    class ConfigDict:
-        from_attributes = True

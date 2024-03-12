@@ -10,7 +10,7 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
+    name = Column(String, nullable=False)
     description = Column(Text)
     project_id = Column(Integer, nullable=False)
     parent_task_id = Column(Integer)
