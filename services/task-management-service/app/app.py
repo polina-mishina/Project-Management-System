@@ -28,17 +28,7 @@ def get_db():
           response_model=Task,
           summary='Добавляет задачу/подзадачу проекта в базу')
 def add_task(task: TaskCreate, db: Session = Depends(get_db)) -> Task:
-    create_date = datetime.now(timezone.utc)
-    update_dict, task = crud_tasks.create_task(db=db, create_date=create_date, task=task)
-    for field, value in update_dict.items():
-        crud_comments.create_system_comment(
-            db=db,
-            user_id=task.creator_id,
-            create_date=create_date,
-            field=field,
-            value=value,
-            task_id=task.id
-        )
+    task = crud_tasks.create_task(db=db, task=task)
     return task
 
 

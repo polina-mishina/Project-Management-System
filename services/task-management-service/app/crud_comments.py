@@ -49,21 +49,32 @@ def create_system_comment(db: Session,
     type_id = 1
 
     if field == "name":
-        data["name"] = value
+        data["early_name"] = value[0]
+        data["name"] = value[1]
     elif field == "description":
         data["description"] = None
     elif field == "executor_id":
         type_id = 2
-        if not value:
+        if not value[0]:
+            data["early_executor_id"] = ""
+            data["executor_id"] = str(value[1])
+        elif not value[1]:
+            data["early_executor_id"] = str(value[0])
             data["executor_id"] = ""
         else:
-            data["executor_id"] = str(value)
+            data["early_executor_id"] = str(value[0])
+            data["executor_id"] = str(value[1])
     elif field == "completion_date":
         type_id = 3
-        if not value:
+        if not value[0]:
+            data["early_completion_date"] = ""
+            data["completion_date"] = str(value[1])
+        elif not value[1]:
+            data["early_completion_date"] = str(value[0])
             data["completion_date"] = ""
         else:
-            data["completion_date"] = str(value)
+            data["early_completion_date"] = str(value[0])
+            data["completion_date"] = str(value[1])
 
     db_comment = models.Comment(
         user_id=user_id,

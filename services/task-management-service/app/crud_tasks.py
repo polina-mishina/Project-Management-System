@@ -7,7 +7,7 @@ from .database import models
 from . import schemas
 
 
-def create_task(db: Session, create_date: datetime, task: schemas.TaskCreate) -> Tuple[dict, models.Task]:
+def create_task(db: Session, task: schemas.TaskCreate) -> models.Task:
     """
     Создает новую задачу в БД
     """
@@ -19,18 +19,13 @@ def create_task(db: Session, create_date: datetime, task: schemas.TaskCreate) ->
         creator_id=task.creator_id,
         executor_id=task.executor_id,
         completion_date=task.completion_date,
-        create_date=create_date
+        create_date=datetime.now(timezone.utc)
     )
-
-    update_dict = {}
-    exclude_fields = {"creator_id", "project_id", "parent_task_id", "create_date"}
-    for field, value in task.model_dump(exclude=exclude_fields).items():
-        update_dict[field] = value
 
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
-    return update_dict, db_task
+    return db_task
 
 
 def get_tasks(db: Session,
@@ -58,7 +53,7 @@ def get_task(db: Session,
 def update_task(db: Session,
                 task_id: int,
                 create_date: datetime,
-                task: schemas.TaskUpdate) -> Tuple[dict, models.Task | None]:
+                task: schemas.TaskUpdate) -> Tuple[dict | None, models.Task | None]:
     """
     Обновляет информацию о задаче/подзадаче
     """
@@ -71,7 +66,7 @@ def update_task(db: Session,
     for field, value in task.model_dump(exclude={"user_id"}).items():
         current_value = getattr(current_task, field)
         if current_value != value:
-            update_dict[field] = value
+            update_dict[field] = current_value, value
 
     result = (db.query(models.Task)
               .filter(models.Task.id == task_id)
@@ -81,13 +76,13 @@ def update_task(db: Session,
 
     if result == 1:
         return update_dict, get_task(db, task_id)
-    return update_dict, None
+    return None, None
 
 
 def partial_update_task(db: Session,
                         task_id: int,
                         create_date: datetime,
-                        task: schemas.TaskPartialUpdate) -> Tuple[dict, models.Task | None]:
+                        task: schemas.TaskPartialUpdate) -> Tuple[dict | None, models.Task | None]:
     """
     Обновляет частично информацию о задаче/подзадаче
     """
@@ -100,7 +95,7 @@ def partial_update_task(db: Session,
     for field, value in task.model_dump(exclude_unset=True, exclude={"user_id"}).items():
         current_value = getattr(current_task, field)
         if current_value != value:
-            update_dict[field] = value
+            update_dict[field] = current_value, value
 
     result = (db.query(models.Task)
               .filter(models.Task.id == task_id)
@@ -110,7 +105,7 @@ def partial_update_task(db: Session,
 
     if result == 1:
         return update_dict, get_task(db, task_id)
-    return update_dict, None
+    return None, None
 
 
 def delete_task(db: Session,
