@@ -1,4 +1,4 @@
-from pydantic import PostgresDsn, Field
+from pydantic import PostgresDsn, Field, FilePath
 from pydantic_settings import BaseSettings, SettingsConfigDict, PydanticBaseSettingsSource
 from typing import Tuple, Type
 
@@ -8,6 +8,12 @@ class Config(BaseSettings):
         default='postgresql://user:pass@localhost:5432/foobar',
         env='POSTGRES_DSN',
         alias='POSTGRES_DSN'
+    )
+
+    default_project_comment_types_config_path: FilePath = Field(
+        default='default-project-comment-types.json',
+        env='DEFAULT_PROJECT_COMMENT_TYPES_CONFIG_PATH',
+        alias='DEFAULT_PROJECT_COMMENT_TYPES_CONFIG_PATH'
     )
 
     model_config = SettingsConfigDict(env_file=".env")

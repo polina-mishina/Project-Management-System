@@ -1,3 +1,5 @@
-from .project import ProjectBase, Project, ProjectIn
+from .project import ProjectBase, Project, ProjectCreate, ProjectUpdate, ProjectPartialUpdate
+from .comment import Comment, CommentTypeUpsert
 
-__all__ = [ProjectBase, Project, ProjectIn]
+__all__ = [ProjectBase, Project, ProjectCreate, ProjectUpdate, ProjectPartialUpdate,
+           Comment, CommentTypeUpsert]
