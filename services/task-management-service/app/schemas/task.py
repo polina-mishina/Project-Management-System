@@ -1,7 +1,8 @@
+import json
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from typing import Optional
 
 
@@ -39,6 +40,14 @@ class TaskCreate(TaskBase):
     parent_task_id: Optional[int] = None
     creator_id: uuid.UUID
     name: str
+
+    @model_validator(mode='before')
+    @classmethod
+    def validate_to_json(cls, value):
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value
+
 
 
 class TaskUpdate(TaskBase):

@@ -1,11 +1,12 @@
+import os
 import uuid
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from .schemas import (Task, TaskCreate, TaskUpdate, TaskPartialUpdate,
                       Comment, UserCommentCreate, UserCommentUpdate, CommentTypeUpsert)
 from .database import DB_INITIALIZER
-from . import crud_tasks, crud_comments, config
+from . import crud_tasks, crud_comments, crud_documents, config
 from typing import List
 from datetime import datetime, timezone
 import json
@@ -24,11 +25,33 @@ def get_db():
         db.close()
 
 
+extensions = {
+    "application/pdf": ".pdf",
+    "application/msword": ".doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+    "application/x-zip-compressed": ".zip"
+}
+
+
 @app.post("/tasks",
           response_model=Task,
           summary='Добавляет задачу/подзадачу проекта в базу')
-def add_task(task: TaskCreate, db: Session = Depends(get_db)) -> Task:
+def add_task(task: TaskCreate,
+             files: List[UploadFile] = File(None),
+             db: Session = Depends(get_db)) -> Task:
     task = crud_tasks.create_task(db=db, task=task)
+    for file in files:
+        extension = extensions.get(file.content_type)
+        if extension:
+            file_path = create_file_path(storage_path=cfg.storage_path, extension=extension)
+            create_file(file=file, file_path=file_path)
+            crud_documents.create_document(
+                db=db,
+                file_name=file.filename,
+                file_path=file_path,
+                user_id=task.creator_id,
+                task_id=task.id
+            )
     return task
 
 
@@ -95,9 +118,11 @@ def partial_update_task(task_id: int, task: TaskPartialUpdate, db: Session = Dep
             response_model=Task,
             summary='Удаляет задачу/подзадачу из базы')
 def delete_task(task_id: int, db: Session = Depends(get_db)) -> Task:
-    deleted_task = crud_tasks.delete_task(db=db, task_id=task_id)
+    deleted_task, file_paths = crud_tasks.delete_task(db=db, task_id=task_id)
     if deleted_task is None:
         raise HTTPException(status_code=404, detail="Задача не найдена")
+    for file_path in file_paths:
+        os.remove(file_path)
     return deleted_task
 
 
@@ -138,6 +163,45 @@ def delete_user_comment(comment_id: uuid.UUID, db: Session = Depends(get_db)) ->
     return deleted_comment
 
 
+@app.post("/documents",
+          summary='Добавляет вложение в базу')
+def add_documents(task_id: int,
+                  user_id: uuid.UUID,
+                  files: List[UploadFile] = File(None),
+                  db: Session = Depends(get_db)):
+    added_documents = []
+    for file in files:
+        extension = extensions.get(file.content_type)
+        if extension:
+            file_path = create_file_path(storage_path=cfg.storage_path, extension=extension)
+            create_file(file=file, file_path=file_path)
+            document = crud_documents.create_document(
+                db=db,
+                file_name=file.filename,
+                file_path=file_path,
+                user_id=user_id,
+                task_id=task_id
+            )
+            added_documents.append(document)
+    return added_documents
+
+
+@app.get("/documents",
+         summary='Возвращает список вложений')
+def get_documents_list(task_id: int, db: Session = Depends(get_db)):
+    return crud_documents.get_documents(db=db, task_id=task_id)
+
+
+@app.delete("/documents/{document_id}",
+            summary='Удаляет вложение из базы')
+def delete_document(document_id: int, db: Session = Depends(get_db)):
+    deleted_document = crud_documents.delete_document(db=db, document_id=document_id)
+    if deleted_document is None:
+        raise HTTPException(status_code=404, detail="Документ не найден")
+    os.remove(deleted_document.file_path)
+    return deleted_document
+
+
 @app.on_event("startup")
 async def on_startup():
     comment_types = []
@@ -149,3 +213,15 @@ async def on_startup():
             crud_comments.upsert_comment_type(
                 db, CommentTypeUpsert(**comment_type)
             )
+
+
+def create_file_path(storage_path: str, extension: str):
+    return os.path.join(storage_path, str(uuid.uuid4()) + extension)
+
+
+def create_file(file: UploadFile, file_path: str):
+    try:
+        with open(file_path, "wb") as out_file:
+            out_file.write(file.file.read())
+    except Exception:
+        raise HTTPException(status_code=500, detail="Ошибка при работе с файлом")

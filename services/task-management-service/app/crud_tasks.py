@@ -109,11 +109,16 @@ def partial_update_task(db: Session,
 
 
 def delete_task(db: Session,
-                task_id: int) -> models.Task | None:
+                task_id: int) -> tuple[models.Task, List[str]] | tuple[None, None]:
     """
     Удаляет информацию о задаче/подзадаче
     """
     deleted_task = get_task(db, task_id)
+    file_paths = []
+    if deleted_task:
+        for document in deleted_task.documents:
+            file_paths.append(document.file_path)
+
     result = (db.query(models.Task)
               .filter(models.Task.id == task_id)
               .delete())
@@ -121,5 +126,5 @@ def delete_task(db: Session,
     db.commit()
 
     if result == 1:
-        return deleted_task
-    return None
+        return deleted_task, file_paths
+    return None, None

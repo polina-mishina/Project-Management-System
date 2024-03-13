@@ -2,7 +2,6 @@ import uuid
 from datetime import datetime
 
 from pydantic import BaseModel
-from typing import Optional
 
 
 class CommentTypeUpsert(BaseModel):

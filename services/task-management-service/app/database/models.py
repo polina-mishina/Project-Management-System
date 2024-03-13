@@ -20,6 +20,7 @@ class Task(Base):
     update_date = Column(DateTime(timezone=True))
     completion_date = Column(DateTime(timezone=True))
     comments = relationship("Comment", backref='task')
+    documents = relationship("TaskDocument", backref='task')
 
 
 class Comment(Base):
@@ -38,3 +39,15 @@ class CommentType(Base):
     __tablename__ = "comment_type"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
+
+
+class TaskDocument(Base):
+    __tablename__ = "task_document"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
+    name = Column(String, nullable=False)
+    file_path = Column(String, nullable=False)
+    create_date = Column(DateTime(timezone=True))
+    task_id = mapped_column(ForeignKey("tasks.id", ondelete='CASCADE'))
+
+
