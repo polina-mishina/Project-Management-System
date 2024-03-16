@@ -4,7 +4,8 @@ import uuid
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from .schemas import (Task, TaskCreate, TaskUpdate, TaskPartialUpdate,
-                      Comment, UserCommentCreate, UserCommentUpdate, CommentTypeUpsert)
+                      Comment, UserCommentCreate, UserCommentUpdate, CommentTypeUpsert,
+                      Document, DocumentCreate)
 from .database import DB_INITIALIZER
 from . import crud_tasks, crud_comments, crud_documents, config
 from typing import List
@@ -129,10 +130,25 @@ def delete_task(task_id: int, db: Session = Depends(get_db)) -> Task:
 @app.post("/comments",
           response_model=Comment,
           summary='Добавляет пользовательский комментарий к задаче/подзадаче в базу')
-def add_user_comment(comment: UserCommentCreate, db: Session = Depends(get_db)) -> Comment:
+def add_user_comment(comment: UserCommentCreate,
+                     files: List[UploadFile] = File(None),
+                     db: Session = Depends(get_db)) -> Comment:
     if crud_tasks.get_task(db=db, task_id=comment.task_id) is None:
         raise HTTPException(status_code=404, detail="Задача не найдена")
     comment = crud_comments.create_user_comment(db=db, comment=comment)
+    for file in files:
+        extension = extensions.get(file.content_type)
+        if extension:
+            file_path = create_file_path(storage_path=cfg.storage_path, extension=extension)
+            create_file(file=file, file_path=file_path)
+            crud_documents.create_document(
+                db=db,
+                file_name=file.filename,
+                file_path=file_path,
+                user_id=comment.user_id,
+                task_id=comment.task_id,
+                comment_id=comment.id
+            )
     return comment
 
 
@@ -157,19 +173,26 @@ def update_user_comment(comment_id: uuid.UUID, comment: UserCommentUpdate, db: S
             response_model=Comment,
             summary='Удаляет пользовательский комментарий из базы')
 def delete_user_comment(comment_id: uuid.UUID, db: Session = Depends(get_db)) -> Comment:
-    deleted_comment = crud_comments.delete_comment(db=db, comment_id=comment_id)
+    deleted_comment, file_paths = crud_comments.delete_comment(db=db, comment_id=comment_id)
     if deleted_comment is None:
         raise HTTPException(status_code=404, detail="Комментарий не найден")
+    for file_path in file_paths:
+        os.remove(file_path)
     return deleted_comment
 
 
 @app.post("/documents",
-          summary='Добавляет вложение в базу')
-def add_documents(task_id: int,
-                  user_id: uuid.UUID,
+          response_model=list[Document],
+          summary='Добавляет вложения к задаче/комментарию в базу')
+def add_documents(document: DocumentCreate,
                   files: List[UploadFile] = File(None),
-                  db: Session = Depends(get_db)):
-    added_documents = []
+                  db: Session = Depends(get_db)) -> List[Document]:
+    if crud_tasks.get_task(db=db, task_id=document.task_id) is None:
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+    if document.comment_id:
+        if crud_comments.get_task_comment(db=db, task_id=document.task_id, comment_id=document.comment_id) is None:
+            raise HTTPException(status_code=404, detail="Комментарий не найден")
+
     for file in files:
         extension = extensions.get(file.content_type)
         if extension:
@@ -179,22 +202,26 @@ def add_documents(task_id: int,
                 db=db,
                 file_name=file.filename,
                 file_path=file_path,
-                user_id=user_id,
-                task_id=task_id
+                user_id=document.user_id,
+                task_id=document.task_id,
+                comment_id=document.comment_id
             )
-            added_documents.append(document)
-    return added_documents
+    return get_documents_list(document.task_id, document.comment_id, db=db)
 
 
 @app.get("/documents",
-         summary='Возвращает список вложений')
-def get_documents_list(task_id: int, db: Session = Depends(get_db)):
-    return crud_documents.get_documents(db=db, task_id=task_id)
+         response_model=list[Document],
+         summary='Возвращает список вложений задачи/комментария')
+def get_documents_list(task_id: int,
+                       comment_id: uuid.UUID = None,
+                       db: Session = Depends(get_db)) -> List[Document]:
+    return crud_documents.get_documents(db=db, task_id=task_id, comment_id=comment_id)
 
 
 @app.delete("/documents/{document_id}",
-            summary='Удаляет вложение из базы')
-def delete_document(document_id: int, db: Session = Depends(get_db)):
+            response_model=Document,
+            summary='Удаляет вложение задачи/комментария из базы')
+def delete_document(document_id: int, db: Session = Depends(get_db)) -> Document:
     deleted_document = crud_documents.delete_document(db=db, document_id=document_id)
     if deleted_document is None:
         raise HTTPException(status_code=404, detail="Документ не найден")

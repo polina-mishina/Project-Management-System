@@ -131,6 +131,17 @@ def get_comment(db: Session,
             .first())
 
 
+def get_task_comment(db: Session,
+                     task_id: int,
+                     comment_id: uuid.UUID | None) -> models.Comment | None:
+    """
+    Возвращает информацию о комментарии задачи
+    """
+    return (db.query(models.Comment)
+            .filter(models.Comment.id == comment_id, models.Comment.task_id == task_id)
+            .first())
+
+
 def update_user_comment(db: Session,
                         comment_id: uuid.UUID,
                         comment: schemas.UserCommentUpdate) -> models.Comment | None:
@@ -150,11 +161,15 @@ def update_user_comment(db: Session,
 
 
 def delete_comment(db: Session,
-                   comment_id: uuid.UUID) -> models.Comment | None:
+                   comment_id: uuid.UUID) -> tuple[models.Comment, List[str]] | tuple[None, None]:
     """
     Удаляет пользовательский комментарий
     """
     deleted_comment = get_comment(db, comment_id)
+    file_paths = []
+    if deleted_comment:
+        for document in deleted_comment.documents:
+            file_paths.append(document.file_path)
     result = (db.query(models.Comment)
               .filter(models.Comment.id == comment_id, models.Comment.type_id == 4)
               .delete())
@@ -162,5 +177,5 @@ def delete_comment(db: Session,
     db.commit()
 
     if result == 1:
-        return deleted_comment
-    return None
+        return deleted_comment, file_paths
+    return None, None

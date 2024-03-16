@@ -49,7 +49,6 @@ class TaskCreate(TaskBase):
         return value
 
 
-
 class TaskUpdate(TaskBase):
     """
     Модель для обновления задачи

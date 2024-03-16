@@ -32,7 +32,8 @@ class Comment(Base):
     create_date = Column(DateTime(timezone=True))
     type_id = mapped_column(ForeignKey("comment_type.id"))
     type = relationship("CommentType")
-    task_id = mapped_column(ForeignKey("tasks.id", ondelete='CASCADE'))
+    task_id = mapped_column(ForeignKey("tasks.id", ondelete='CASCADE'), nullable=False)
+    documents = relationship("TaskDocument", backref='comment')
 
 
 class CommentType(Base):
@@ -48,6 +49,7 @@ class TaskDocument(Base):
     name = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
     create_date = Column(DateTime(timezone=True))
-    task_id = mapped_column(ForeignKey("tasks.id", ondelete='CASCADE'))
+    task_id = mapped_column(ForeignKey("tasks.id", ondelete='CASCADE'), nullable=False)
+    comment_id = mapped_column(ForeignKey("comment.id", ondelete='CASCADE'))
 
 

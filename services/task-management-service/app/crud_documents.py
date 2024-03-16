@@ -5,13 +5,15 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from .database import models
+from . import schemas
 
 
 def create_document(db: Session,
                     file_name: str,
                     file_path: str,
+                    task_id: int,
                     user_id: uuid.UUID,
-                    task_id: int) -> models.TaskDocument:
+                    comment_id: uuid.UUID = None) -> models.TaskDocument:
     """
     Создает новый документ в БД
     """
@@ -20,7 +22,8 @@ def create_document(db: Session,
         name=file_name,
         file_path=file_path,
         create_date=datetime.now(timezone.utc),
-        task_id=task_id
+        task_id=task_id,
+        comment_id=comment_id
     )
 
     db.add(db_document)
@@ -30,12 +33,13 @@ def create_document(db: Session,
 
 
 def get_documents(db: Session,
-                  task_id: int) -> List[models.TaskDocument]:
+                  task_id: int,
+                  comment_id: uuid.UUID | None) -> List[models.TaskDocument]:
     """
     Возвращает вложения
     """
     return (db.query(models.TaskDocument)
-            .filter(models.TaskDocument.task_id == task_id)
+            .filter(models.TaskDocument.task_id == task_id, models.TaskDocument.comment_id == comment_id)
             .order_by(models.TaskDocument.create_date)
             .all())
 
