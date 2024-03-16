@@ -16,6 +16,12 @@ class Config(BaseSettings):
         alias='DEFAULT_PROJECT_COMMENT_TYPES_CONFIG_PATH'
     )
 
+    storage_path: str = Field(
+        default='storage/',
+        env='STORAGE_PATH',
+        alias='STORAGE_PATH'
+    )
+
     model_config = SettingsConfigDict(env_file=".env")
 
     @classmethod

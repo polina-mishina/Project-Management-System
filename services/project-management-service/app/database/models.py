@@ -17,6 +17,7 @@ class Project(Base):
     update_date = Column(DateTime(timezone=True))
     completion_date = Column(DateTime(timezone=True))
     comments = relationship("ProjectComment", backref='project')
+    documents = relationship("ProjectDocument", backref='project')
 
 
 class ProjectComment(Base):
@@ -28,10 +29,20 @@ class ProjectComment(Base):
     create_date = Column(DateTime(timezone=True))
     type_id = mapped_column(ForeignKey("project_comment_type.id"))
     type = relationship("ProjectCommentType")
-    project_id = mapped_column(ForeignKey("projects.id", ondelete='CASCADE'))
+    project_id = mapped_column(ForeignKey("projects.id", ondelete='CASCADE'), nullable=False)
 
 
 class ProjectCommentType(Base):
     __tablename__ = "project_comment_type"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
+
+
+class ProjectDocument(Base):
+    __tablename__ = "project_document"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
+    name = Column(String, nullable=False)
+    file_path = Column(String, nullable=False)
+    create_date = Column(DateTime(timezone=True))
+    project_id = mapped_column(ForeignKey("projects.id", ondelete='CASCADE'), nullable=False)

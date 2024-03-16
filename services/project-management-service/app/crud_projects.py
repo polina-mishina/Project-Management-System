@@ -101,11 +101,16 @@ def partial_update_project(db: Session,
     return None, None
 
 
-def delete_project(db: Session, project_id: int) -> models.Project | None:
+def delete_project(db: Session, project_id: int) -> tuple[models.Project, List[str]] | tuple[None, None]:
     """
     Удаляет информацию о проекте
     """
     deleted_project = get_project(db, project_id)
+    file_paths = []
+    if deleted_project:
+        for document in deleted_project.documents:
+            file_paths.append(document.file_path)
+
     result = (db.query(models.Project)
               .filter(models.Project.id == project_id)
               .delete())
@@ -113,5 +118,5 @@ def delete_project(db: Session, project_id: int) -> models.Project | None:
     db.commit()
 
     if result == 1:
-        return deleted_project
-    return None
+        return deleted_project, file_paths
+    return None, None
